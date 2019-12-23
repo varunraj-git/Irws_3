@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class IRWS3 {
@@ -14,10 +14,10 @@ public class IRWS3 {
 	public static void main(String[] args) throws IOException {
 		/* read input data */
 		final List<String> inputData = getInputData(args[0]);
-		Map<String, List<String>> groupedData = separateAB(inputData);
-		int toSplit = inputData.get(0).split(";")[2].length() / Integer.parseInt(args[1]);
-		processInputData(groupedData, toSplit, Integer.parseInt(args[1]));
-
+		final Map<String, List<String>> groupedData = separateAB(inputData);
+		final int toSplit = inputData.get(0).split(";")[2].length() / Integer.parseInt(args[1]);
+		final Map<String, List<Double>> engine_probfuse = processInputData(groupedData, toSplit, Integer.parseInt(args[1]));
+		System.out.println(engine_probfuse);
 	}
 
 	/**
@@ -25,7 +25,8 @@ public class IRWS3 {
 	 * corresponding engine
 	 */
 	private static Map<String, List<String>> separateAB(final List<String> data) {
-		return data.stream().collect(Collectors.groupingBy(str -> str.split(";")[1]));
+		return data.stream()
+				.collect(Collectors.groupingBy(str -> str.split(";")[1], TreeMap::new, Collectors.toList()));
 
 	}
 
@@ -45,16 +46,63 @@ public class IRWS3 {
 		}
 	}
 
-	private static void processInputData(final Map<String, List<String>> data, final int partitions, final int splt) {
-		Map<String, List<String>> engine_vstrings = new HashMap<>();
+	private static Map<String, List<Double>> processInputData(final Map<String, List<String>> data, final int partitions, final int splt) {
+		Map<String, List<String>> engine_vstrings = new TreeMap<>();
 		data.entrySet().forEach(dt -> {
 			List<String> dtList = dt.getValue();
 			List<String> vStrings = splitToPortionsAndCalculate(dtList, partitions, splt);
 			engine_vstrings.put(dt.getKey(), vStrings);
 		});
-		
-		
-		System.out.println(engine_vstrings);
+		return doCalculations(engine_vstrings, partitions, splt);
+
+	}
+
+	/**
+	 * This function gets the result of the segments as double for both engine A and B
+	 * Key => Engine
+	 * Value => List of probfuse values for each input vertically sliced data 
+	 * @return 
+	 * */
+	private static Map<String, List<Double>> doCalculations(final Map<String, List<String>> engine_vStrings, final int partitions,
+			final int spltNum) {
+		int queriesCount = engine_vStrings.size();
+		Map<String, List<Double>> finalMap = new TreeMap<>();
+		engine_vStrings.entrySet().forEach(ev -> {
+			List<Double> finalValues = new ArrayList<>();
+			List<String> vString = ev.getValue();
+
+			int temp = 1;
+			int totalRs = 0;
+			for (int i = 0; i < vString.size(); ++i) {
+
+				// calculate segments
+				for (int j = 0; j < queriesCount; ++j) {
+					if ('R' == vString.get(i).charAt(j)) {
+						++totalRs;
+					}
+
+				}
+				double result = 0.0;
+				if (temp >= partitions) {
+					result = (double) totalRs / (queriesCount * partitions);
+					for (int t = 0; t < partitions; ++t) {
+						finalValues.add(result);
+					}
+					temp = 1;
+					totalRs = 0;
+
+				} else {
+					// increment partition count
+					++temp;
+				}
+
+			}
+
+			finalMap.put(ev.getKey(), finalValues);
+
+		});
+
+		return finalMap;
 
 	}
 
@@ -72,19 +120,6 @@ public class IRWS3 {
 		}
 
 		return verticalStrings;
-	}
-
-	/*
-	 * Loop through the string, get count of 'R'
-	 */
-	private static int getRCount(final String engine) {
-		int count = 0;
-		for (int i = 0; i < engine.length(); i++) {
-			if (engine.charAt(i) == 'R') {
-				++count;
-			}
-		}
-		return count;
 	}
 
 }
