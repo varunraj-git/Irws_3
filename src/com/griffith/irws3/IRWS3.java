@@ -4,9 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class IRWS3 {
@@ -16,17 +16,18 @@ public class IRWS3 {
 		final List<String> inputData = getInputData(args[0]);
 		final Map<String, List<String>> groupedData = separateAB(inputData);
 		final int toSplit = inputData.get(0).split(";")[2].length() / Integer.parseInt(args[1]);
-		final Map<String, List<Double>> engine_probfuse = processInputData(groupedData, toSplit, Integer.parseInt(args[1]));
+		final Map<String, List<Double>> engine_probfuse = processInputData(groupedData, toSplit,
+				Integer.parseInt(args[1]));
 		System.out.println(engine_probfuse);
 	}
 
-	/**
+	/*
 	 * Maps Engine name to queries Key : Engine name value : List of queries run on
 	 * corresponding engine
 	 */
 	private static Map<String, List<String>> separateAB(final List<String> data) {
 		return data.stream()
-				.collect(Collectors.groupingBy(str -> str.split(";")[1], TreeMap::new, Collectors.toList()));
+				.collect(Collectors.groupingBy(str -> str.split(";")[1], LinkedHashMap::new, Collectors.toList()));
 
 	}
 
@@ -46,8 +47,9 @@ public class IRWS3 {
 		}
 	}
 
-	private static Map<String, List<Double>> processInputData(final Map<String, List<String>> data, final int partitions, final int splt) {
-		Map<String, List<String>> engine_vstrings = new TreeMap<>();
+	private static Map<String, List<Double>> processInputData(final Map<String, List<String>> data,
+			final int partitions, final int splt) {
+		Map<String, List<String>> engine_vstrings = new LinkedHashMap<>();
 		data.entrySet().forEach(dt -> {
 			List<String> dtList = dt.getValue();
 			List<String> vStrings = splitToPortionsAndCalculate(dtList, partitions, splt);
@@ -58,15 +60,14 @@ public class IRWS3 {
 	}
 
 	/**
-	 * This function gets the result of the segments as double for both engine A and B
-	 * Key => Engine
-	 * Value => List of probfuse values for each input vertically sliced data 
-	 * @return 
-	 * */
-	private static Map<String, List<Double>> doCalculations(final Map<String, List<String>> engine_vStrings, final int partitions,
-			final int spltNum) {
+	 * This function gets the result of the segments as double for both engine A and
+	 * B Key => Engine Value => List of probfuse values for each input vertically
+	 * sliced data
+	 */
+	private static Map<String, List<Double>> doCalculations(final Map<String, List<String>> engine_vStrings,
+			final int partitions, final int spltNum) {
 		int queriesCount = engine_vStrings.size();
-		Map<String, List<Double>> finalMap = new TreeMap<>();
+		Map<String, List<Double>> finalMap = new LinkedHashMap<>();
 		engine_vStrings.entrySet().forEach(ev -> {
 			List<Double> finalValues = new ArrayList<>();
 			List<String> vString = ev.getValue();
@@ -103,6 +104,20 @@ public class IRWS3 {
 		});
 
 		return finalMap;
+
+	}
+
+	/*
+	 * Get the input data, maps to the values
+	 * */
+	private static void getProbfuseForInputData(final Map<String, List<Double>> probfuseMap,
+			final Map<String, List<String>> inputMap) {
+		Map<Integer, List<Double>> valueMap = new LinkedHashMap<>();
+		probfuseMap.entrySet().forEach(es -> {
+			
+			
+
+		});
 
 	}
 
